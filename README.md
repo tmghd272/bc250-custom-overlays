@@ -108,9 +108,10 @@ Create the "MangoHud" directory if you don’t have one.
 # BC250 BIOS Logo
 You can download my BC250 BIOS ROM with the custom logo I made here.
 
-## [bc250-custom-bios-logo](https://github.com/tmghd272/bc250-custom-bios-logo)
+- [bc250-amd.rom](https://github.com/tmghd272/bc250-custom-bios-logo/blob/main/bc250-amd.rom)
 
-<img src="images/bios-preview/amd-bc250.png" width="300">
+### Complete Guide: [bc250-custom-bios-logo](https://github.com/tmghd272/bc250-custom-bios-logo)
 
-<img src="images/bios-preview/bc250-custom-logo-preview.jpg" width="300">
+<img src="images/bios-preview/amd-bc250.png" width="350">
 
+<img src="images/bios-preview/bc250-custom-logo-preview.jpg" width="350">
