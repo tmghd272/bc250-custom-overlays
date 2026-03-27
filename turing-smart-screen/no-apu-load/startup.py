@@ -13,11 +13,11 @@ import copy
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 COM_PORT = "AUTO"
-WIDTH, HEIGHT = 480, 320
+WIDTH, HEIGHT = 320, 480
 REVISION = "A"
 
 # =========================================================
-# Hardware Stats Functions
+# Hardware Stats Functions (NO APU LOAD)
 # =========================================================
 
 # ---------------- GPU Clock (MHz), Temperature (°C), VRAM Usage (GB) ----------------
@@ -290,57 +290,69 @@ def get_network_speed(interface):
 # Main Display Loop
 # =========================================================
 if __name__ == "__main__":
-    lcd_comm = LcdCommRevA(com_port=COM_PORT, display_width=WIDTH, display_height=HEIGHT)
-    lcd_comm.Reset()
-    lcd_comm.InitializeComm()
-    lcd_comm.SetBrightness(level=20)
-    lcd_comm.SetBackplateLedColor(led_color=(255, 255, 255))
-    lcd_comm.SetOrientation(orientation=Orientation.PORTRAIT)
-
-    background = f"res/backgrounds/example_{lcd_comm.get_width()}x{lcd_comm.get_height()}.png"
-    lcd_comm.DisplayBitmap(background)
-
     interface_name = auto_detect_interface()
+    background_path = f"res/backgrounds/example_{WIDTH}x{HEIGHT}.png"
 
     while True:
-        now = datetime.now().strftime("%m/%d/%Y   %I:%M %p")
-        gpu_clock, gpu_temp, vram_used = get_gpu_stats()
-        cpu_clock = get_cpu_freq()
-        cpu_temp = get_cpu_temp_from_sensors()
-        cpu_load = get_cpu_load()
-        ram_used, ram_total = get_ram_usage()
-        ppt_watts = get_power_usage()
-        voltage_mV = get_voltage_mV()
-        fan_rpm = get_fan_rpm()
-        nvme_temp = get_nvme_temp()
-        rx_speed, tx_speed = get_network_speed(interface_name)
-        disk_read, disk_write = get_total_disk_rw()
+        try:
+            # --- Connect / Reconnect Turzx ---
+            lcd_comm = LcdCommRevA(com_port=COM_PORT, display_width=WIDTH, display_height=HEIGHT)
+            lcd_comm.Reset()  # Black screen / full reset
+            lcd_comm.InitializeComm()
+            lcd_comm.SetBrightness(level=20)
+            lcd_comm.SetBackplateLedColor(led_color=(255, 255, 255))
+            lcd_comm.SetOrientation(orientation=Orientation.PORTRAIT)
+            lcd_comm.DisplayBitmap(background_path)
 
-        text = (
-            f"   {now}\n"
-            f"         AMD BC-250\n"
-            f"{'RDNA2:':<11}{int(gpu_clock):>5} {'MHz':<4}{int(gpu_temp):>3} {'°C':<4}\n"
-            f"{'Zen2:':<6}{int(cpu_load):>3}% {int(cpu_clock):>5} {'MHz':<4}{int(cpu_temp):>3} {'°C':<2}\n\n"
-            f"         16GB GDDR6\n"
-            f"{'VRAM:':<7}{vram_used:>5.1f} {'GB':<4}\n"
-            f"{'RAM:':<7}{ram_used:>5.1f} {'GB':<4}\n\n"
-            f"          Metrics\n"
-            f"{'APU Power:':<14}{ppt_watts:>6} {'W':<4}\n"
-            f"{'APU mV:':<16}{voltage_mV:>4} {'mV':<4}\n"
-            f"{'APU Fan:':<16}{fan_rpm:>4} {'RPM':<4}\n"
-            f"{'NVMe Temp:':<16}{nvme_temp:>4} {'°C':<4}\n"
-            f"{'Disk Read:':<16}{disk_read:>5.1f} {'MB/s↓':<8}\n"
-            f"{'Disk Write:':<16}{disk_write:>5.1f} {'MB/s↑':<8}\n"
-            f"{'Net Mbps:':<13}{rx_speed:>4.1f} {'↓':<3}{tx_speed:>4.1f} {'↑':<2}"
-        )
+            # --- Main metrics loop ---
+            while True:
+                now = datetime.now().strftime("%m/%d/%Y   %I:%M %p")
+                gpu_clock, gpu_temp, vram_used = get_gpu_stats()
+                cpu_clock = get_cpu_freq()
+                cpu_temp = get_cpu_temp_from_sensors()
+                cpu_load = get_cpu_load()
+                ram_used, ram_total = get_ram_usage()
+                ppt_watts = get_power_usage()
+                voltage_mV = get_voltage_mV()
+                fan_rpm = get_fan_rpm()
+                nvme_temp = get_nvme_temp()
+                rx_speed, tx_speed = get_network_speed(interface_name)
+                disk_read, disk_write = get_total_disk_rw()
 
-        lcd_comm.DisplayText(
-            text,
-            10,
-            10,
-            font="res/fonts/jetbrains-mono/JetBrainsMono-ExtraBold.ttf",
-            font_size=18,
-            font_color=(220, 220, 255),
-            background_image=background
-        )
-        time.sleep(0.5)
+                text = (
+                    f"   {now}\n"
+                    f"         AMD BC-250\n"
+                    f"{'RDNA2:':<11}{int(gpu_clock):>5} {'MHz':<4}{int(gpu_temp):>3} {'°C':<4}\n"
+                    f"{'Zen2:':<6}{int(cpu_load):>3}% {int(cpu_clock):>5} {'MHz':<4}{int(cpu_temp):>3} {'°C':<2}\n\n"
+                    f"         16GB GDDR6\n"
+                    f"{'VRAM:':<7}{vram_used:>5.1f} {'GB':<4}\n"
+                    f"{'RAM:':<7}{ram_used:>5.1f} {'GB':<4}\n\n"
+                    f"          Metrics\n"
+                    f"{'APU Power:':<14}{ppt_watts:>6} {'W':<4}\n"
+                    f"{'APU mV:':<16}{voltage_mV:>4} {'mV':<4}\n"
+                    f"{'APU Fan:':<16}{fan_rpm:>4} {'RPM':<4}\n"
+                    f"{'NVMe Temp:':<16}{nvme_temp:>4} {'°C':<4}\n"
+                    f"{'Disk Read:':<16}{disk_read:>5.1f} {'MB/s↓':<8}\n"
+                    f"{'Disk Write:':<16}{disk_write:>5.1f} {'MB/s↑':<8}\n"
+                    f"{'Net Mbps:':<13}{rx_speed:>4.1f} {'↓':<3}{tx_speed:>4.1f} {'↑':<2}"
+                )
+
+                lcd_comm.DisplayText(
+                    text,
+                    10,
+                    10,
+                    font="res/fonts/jetbrains-mono/JetBrainsMono-ExtraBold.ttf",
+                    font_size=18,
+                    font_color=(220, 220, 255),
+                    background_image=background_path
+                )
+                time.sleep(0.5)
+
+        except Exception as e:
+            logger.warning(f"Turzx error detected, reconnecting: {e}")
+            try:
+                lcd_comm.Reset()
+                lcd_comm = None
+            except:
+                pass
+            time.sleep(1)  # wait 1s before trying to reconnect
