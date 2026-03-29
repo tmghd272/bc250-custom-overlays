@@ -238,49 +238,51 @@ def get_total_disk_rw():
 # =========================================================
 # Network Speed Monitoring
 # =========================================================
-net_prev = copy.deepcopy(psutil.net_io_counters(pernic=True))
+net_prev = {}
 prev_time = time.time()
 
 # ---------------- Auto Detect Network Interface ----------------
 def auto_detect_interface():
     """Return first active physical network interface."""
+    try:
+        output = subprocess.check_output(["nmcli", "-t", "-f", "DEVICE,STATE", "device"], text=True)
+        for line in output.strip().splitlines():
+            device, state = line.split(":")
+            if state == "connected":
+                return device
+    except Exception as e:
+        logger.warning(f"Failed to detect active interface via nmcli: {e}")
+
+    # Fallback to psutil if nmcli fails
     virtual_prefixes = ("uap", "virbr", "tap", "docker", "veth")
     counters = psutil.net_io_counters(pernic=True)
-    best_iface = None
-    max_bytes = 0
-
     for iface, stats in counters.items():
         if iface == "lo" or iface.startswith(virtual_prefixes):
             continue
-        total_bytes = stats.bytes_recv + stats.bytes_sent
-        if total_bytes > max_bytes:
-            max_bytes = total_bytes
-            best_iface = iface
-
-    if best_iface:
-        return best_iface
-    # fallback to any non-virtual interface
-    for iface in counters.keys():
-        if not iface.startswith(virtual_prefixes) and iface != "lo":
-            return iface
-    return list(counters.keys())[0]
+        return iface
+    return "lo"
 
 # ---------------- Get Network Speed (Mbps) ----------------
 def get_network_speed(interface):
     """Return network Rx/Tx speed in Mbps for given interface."""
     global net_prev, prev_time
     counters = psutil.net_io_counters(pernic=True)
-    now_time = time.time()
-    interval = now_time - prev_time
-    prev_time = now_time
+    now = time.time()
+    interval = now - prev_time
+    prev_time = now
 
-    if interface not in counters or interface not in net_prev:
-        net_prev = copy.deepcopy(counters)
+    # Initialize counters if missing
+    if interface not in counters:
+        net_prev[interface] = counters.get(interface, counters.get("lo"))
+        return 0.0, 0.0
+    if interface not in net_prev:
+        net_prev[interface] = copy.deepcopy(counters[interface])
         return 0.0, 0.0
 
     rx_bytes = counters[interface].bytes_recv - net_prev[interface].bytes_recv
     tx_bytes = counters[interface].bytes_sent - net_prev[interface].bytes_sent
-    net_prev = copy.deepcopy(counters)
+
+    net_prev[interface] = copy.deepcopy(counters[interface])
 
     rx_mbps = max(rx_bytes * 8 / 1024 / 1024 / interval, 0)
     tx_mbps = max(tx_bytes * 8 / 1024 / 1024 / interval, 0)
