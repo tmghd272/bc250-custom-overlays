@@ -7,6 +7,7 @@ from datetime import datetime
 from library.lcd.lcd_comm_rev_a import LcdCommRevA, Orientation
 from library.log import logger
 import psutil
+import socket
 import copy
 
 # Set working directory to script's location
@@ -244,23 +245,23 @@ prev_time = time.time()
 # ---------------- Auto Detect Network Interface ----------------
 def auto_detect_interface():
     """Return first active physical network interface."""
-    try:
-        output = subprocess.check_output(["nmcli", "-t", "-f", "DEVICE,STATE", "device"], text=True)
-        for line in output.strip().splitlines():
-            device, state = line.split(":")
-            if state == "connected":
-                return device
-    except Exception as e:
-        logger.warning(f"Failed to detect active interface via nmcli: {e}")
-
-    # Fallback to psutil if nmcli fails
     virtual_prefixes = ("uap", "virbr", "tap", "docker", "veth")
-    counters = psutil.net_io_counters(pernic=True)
-    for iface, stats in counters.items():
-        if iface == "lo" or iface.startswith(virtual_prefixes):
-            continue
-        return iface
-    return "lo"
+    
+    while True:
+        counters = psutil.net_io_counters(pernic=True)
+        for iface in counters.keys():
+            if iface == "lo" or iface.startswith(virtual_prefixes):
+                continue
+            # Check if interface has a valid IP
+            try:
+                addrs = psutil.net_if_addrs().get(iface, [])
+                for addr in addrs:
+                    if addr.family == socket.AF_INET and not addr.address.startswith("169.254"):
+                        return iface
+            except Exception:
+                continue
+        logger.warning("No network with valid IP yet, retrying in 1s...")
+        time.sleep(1)
 
 # ---------------- Get Network Speed (Mbps) ----------------
 def get_network_speed(interface):
