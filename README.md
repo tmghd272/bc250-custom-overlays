@@ -28,6 +28,8 @@ A custom-made UI for the Turzx 3.5" screen that detects BC250 sensors:
 ### Without APU Load sensors
 (in case you don’t need it or are having trouble fixing 655% on your system):
 
+*Note:* This version without APU Load sensors will be deprecated and stop receiving updates soon.
+
 - [download startup.py without APU load](turing-smart-screen/no-apu-load/startup.py)  
 <img src="images/turzx-preview/turzx-screen-noapuload-preview.jpg" width="300">
 

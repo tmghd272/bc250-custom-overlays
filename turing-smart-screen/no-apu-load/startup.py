@@ -21,13 +21,26 @@ REVISION = "A"
 # Hardware Stats Functions (NO APU LOAD)
 # =========================================================
 
+# Auto-detect card location once
+drm_path = "/sys/class/drm"
+if not os.path.exists(drm_path):
+    logger.error(f"{drm_path} does not exist! Cannot detect GPU cards.")
+    card = None
+else:
+    # find first card directory
+    card = next((f"card{i}" for i in range(10) if os.path.exists(os.path.join(drm_path, f"card{i}", "device"))), None)
+    if card is None:
+        logger.error(f"No GPU card directories found under {drm_path}!")
+    else:
+        logger.info(f"BC-250 APU detected at {card}")
+
 # ---------------- GPU Clock (MHz), Temperature (°C), VRAM Usage (GB) ----------------
 def get_gpu_stats():
     """Read GPU clock (MHz), temperature (°C), and VRAM usage (GB)."""
     clock = temp = 0
     used_gb = 0.0
     try:
-        clock_path = "/sys/class/drm/card1/device/pp_dpm_sclk"
+        clock_path = f"/sys/class/drm/{card}/device/pp_dpm_sclk"
         if os.path.exists(clock_path):
             with open(clock_path) as f:
                 for line in f:
@@ -36,7 +49,7 @@ def get_gpu_stats():
                         clock = int(parts)
                         break
 
-        temp_path = "/sys/class/drm/card1/device/hwmon"
+        temp_path = f"/sys/class/drm/{card}/device/hwmon"
         for entry in os.listdir(temp_path):
             sensor_path = os.path.join(temp_path, entry, "temp1_input")
             if os.path.exists(sensor_path):
@@ -45,8 +58,8 @@ def get_gpu_stats():
                     break
 
         try:
-            vram_used = int(open("/sys/class/drm/card1/device/mem_info_vram_used").read().strip())
-            gtt_used  = int(open("/sys/class/drm/card1/device/mem_info_gtt_used").read().strip())
+            vram_used = int(open(f"/sys/class/drm/{card}/device/mem_info_vram_used").read().strip())
+            gtt_used  = int(open(f"/sys/class/drm/{card}/device/mem_info_gtt_used").read().strip())
             used_gb = round((vram_used + gtt_used) / (1024**3), 2)
         except Exception as e:
             logger.warning(f"VRAM sysfs parse error: {e}")

@@ -21,22 +21,56 @@ REVISION = "A"
 # Hardware Stats Functions
 # =========================================================
 
+# Auto-detect card location once
+drm_path = "/sys/class/drm"
+if not os.path.exists(drm_path):
+    logger.error(f"{drm_path} does not exist! Cannot detect GPU cards.")
+    card = None
+else:
+    # find first card directory
+    card = next((f"card{i}" for i in range(10) if os.path.exists(os.path.join(drm_path, f"card{i}", "device"))), None)
+    if card is None:
+        logger.error(f"No GPU card directories found under {drm_path}!")
+    else:
+        logger.info(f"BC-250 APU detected at {card}")
+
 # ---------------- GPU Load (%) ----------------
 def get_gpu_load():
-    """Read GPU load (%) from patched gpu_metrics (offset 0x1C)."""
+    """
+    Read GPU load (%) from patched or unpatched gpu_metrics.
+    
+    Handles:
+      - Old Cyan Skillfish: 1-100 raw values
+      - New Cyan Skillfish: 0-10000 raw values (decimal scaling)
+      - Unpatched / placeholder: 65535 -> 0
+
+    Returns integer (0-100) for Turzx compatibility.
+    """
     try:
-        with open("/sys/class/drm/card1/device/gpu_metrics", "rb") as f:
+        with open(f"/sys/class/drm/{card}/device/gpu_metrics", "rb") as f:
             data = f.read(128)
 
-        load = int.from_bytes(data[28:30], byteorder="little")
+        raw_load = int.from_bytes(data[28:30], byteorder="little")
 
-        # If broken (65535) or invalid, return 0
-        if load == 65535 or load > 100:
+        # Null / invalid
+        if raw_load == 65535:
             return 0
-        
-        return load
+
+        # Detect new patch: raw > 100 → scale down from 0-10000 to 0-100
+        if raw_load > 100:
+            load = raw_load / 100
+        else:
+            # old patch: use as-is
+            load = raw_load
+
+        # Cap at 100% just in case
+        if load > 100:
+            load = 100
+
+        return int(load)
 
     except Exception as e:
+        # fallback 0
         logger.warning(f"GPU load read error: {e}")
         return 0
 
@@ -46,7 +80,7 @@ def get_gpu_stats():
     clock = temp = 0
     used_gb = 0.0
     try:
-        clock_path = "/sys/class/drm/card1/device/pp_dpm_sclk"
+        clock_path = f"/sys/class/drm/{card}/device/pp_dpm_sclk"
         if os.path.exists(clock_path):
             with open(clock_path) as f:
                 for line in f:
@@ -55,7 +89,7 @@ def get_gpu_stats():
                         clock = int(parts)
                         break
 
-        temp_path = "/sys/class/drm/card1/device/hwmon"
+        temp_path = f"/sys/class/drm/{card}/device/hwmon"
         for entry in os.listdir(temp_path):
             sensor_path = os.path.join(temp_path, entry, "temp1_input")
             if os.path.exists(sensor_path):
@@ -64,8 +98,8 @@ def get_gpu_stats():
                     break
 
         try:
-            vram_used = int(open("/sys/class/drm/card1/device/mem_info_vram_used").read().strip())
-            gtt_used  = int(open("/sys/class/drm/card1/device/mem_info_gtt_used").read().strip())
+            vram_used = int(open(f"/sys/class/drm/{card}/device/mem_info_vram_used").read().strip())
+            gtt_used  = int(open(f"/sys/class/drm/{card}/device/mem_info_gtt_used").read().strip())
             used_gb = round((vram_used + gtt_used) / (1024**3), 2)
         except Exception as e:
             logger.warning(f"VRAM sysfs parse error: {e}")
