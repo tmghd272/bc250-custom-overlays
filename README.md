@@ -36,6 +36,8 @@ A custom-made UI for the Turzx 3.5" screen that detects BC250 sensors:
 ## Setup Tutorial
 If you haven’t set up your Turzx screen yet, watch this YT vid by [Old Lamer](https://www.youtube.com/watch?v=vTxWFS8VAcI&t) to set up [turing-smart-screen-python](https://github.com/mathoudebine/turing-smart-screen-python) first
 
+* I also made a Toolkit for arch systems: https://github.com/tmghd272/bc250-turzx-config
+
 (if needed, make sure to back up your original *startup.py*).
 
 To install my custom overlay, simply put `startup.py` inside:
