@@ -5,8 +5,6 @@ A bunch of custom overlays/logos that I made for archival purposes that anyone c
 
 ## Table of Contents
 - [Turzx Screen](#turzx-screen-fully-designed-for-bc250)
-  - [With APU Load](#with-apu-load-sensors)
-  - [Without APU Load](#without-apu-load-sensors)
   - [Setup Tutorial](#setup-tutorial)
   - [What’s Included](#whats-included)
   - [startup.py Issues](#startuppy-issues)
@@ -16,25 +14,23 @@ A bunch of custom overlays/logos that I made for archival purposes that anyone c
 - [BIOS Logo](#bc250-bios-logo)
   - [BC250 BIOS Logo](https://github.com/tmghd272/bc250-custom-bios-logo)
 
-
 # Turzx Screen Fully Designed for BC250
 A custom-made UI for the Turzx 3.5" screen that detects BC250 sensors:
 
-### With APU Load sensors:
-- [download startup.py with APU load](turing-smart-screen/startup.py)
+- [download startup.py](turing-smart-screen/startup.py)
 
 <img src="images/turzx-preview/turzx-screen-preview.jpg" width="300">
 
-### Without APU Load sensors
-(in case you don’t need it or are having trouble fixing 655% on your system):
-
-*Note:* This version without APU Load sensors will be deprecated and stop receiving updates soon.
-
-- [download startup.py without APU load](turing-smart-screen/no-apu-load/startup.py)  
-<img src="images/turzx-preview/turzx-screen-noapuload-preview.jpg" width="300">
-
 ## Setup Tutorial
-If you haven’t set up your Turzx screen yet, watch this YT vid by [Old Lamer](https://www.youtube.com/watch?v=vTxWFS8VAcI&t) to set up [turing-smart-screen-python](https://github.com/mathoudebine/turing-smart-screen-python) first
+### Prerequisites
+* **nct6683** or **nct6687** *(required, or the Turzx screen will fail to load and get stuck in a boot loop).*
+* **sensors** *(APU Power needs this).*
+* **drivetemp** *(NVMe Temp needs this).*
+* **Python**
+* **pip**
+* **turing-smart-screen-python**
+
+If you haven’t set up your Turzx screen yet, watch this YT vid by [Old Lamer](https://www.youtube.com/watch?v=vTxWFS8VAcI&t) to set up [turing-smart-screen-python](https://github.com/mathoudebine/turing-smart-screen-python) for Bazzite systems.
 
 * I also made a Toolkit for arch systems: https://github.com/tmghd272/bc250-turzx-config
 
