@@ -87,12 +87,14 @@ Put `MangoHud.conf` or `presets.conf` inside:
 
 Create the "MangoHud" directory if you don’t have one.
 
-### What’s Included
-- APU Power <- Shows your current APU wattage  
+### What's Included
+- **APU Power** — Current APU package wattage (`power1_average`)
 
-- APU mV <- Shows your current APU voltage
+- **APU mV** — Current APU core voltage, vddgfx (`in0_input`)
 
-- APU Fan <- Reads `fan2_input` (system RPM)
+- **CPU mV** — Current CPU core voltage, vddnb (`in1_input`)
+
+- **APU Fan** — System fan RPM (`fan2_input`)
 
 
 # BC250 BIOS Logo
