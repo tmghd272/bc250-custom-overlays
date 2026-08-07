@@ -19,12 +19,13 @@ A custom-made UI for the Turzx 3.5" screen that detects BC250 sensors:
 
 - [download startup.py](turing-smart-screen/startup.py)
 
-<img src="images/turzx-preview/turzx-screen-preview.jpg" width="300">
+> **Note:** The displayed APU clock is intentionally incorrect due to a known `amdgpu` clock reporting issue after unlocking the BC250 CPU cores using [bc250-core-unlock](https://github.com/rw-r-r-0644/bc250-core-unlock).
+
+<img src="images/turzx-preview/turzx-screen-preview-new.jpg" width="300">
 
 ## Setup Tutorial
 ### Prerequisites
-* **nct6683** or **nct6687** *(required, or the Turzx screen will fail to load and get stuck in a boot loop).*
-* **sensors** *(APU Power needs this).*
+* **nct6683** or **nct6687** *(APU Fan needs this).*
 * **drivetemp** *(NVMe Temp needs this).*
 * **Python**
 * **pip**
@@ -46,35 +47,24 @@ Optional* If you want my custom template background logo I showed in the preview
 Then replug the device or run:
 `systemctl --user restart turing.service`
 
-## What’s Included
-- Date and Time / BC250 Specs
+## What's Included
 
-- APU Load, Clock, Temps <- APU  
-  Load will always be at 0% without the 655% GPU usage fix script.
-
-- CPU Load, Clock, Temps <- CPU  
-
-- VRAM <- Current APU VRAM usage  
-
-- RAM <- Current system RAM usage  
-
-- APU Power <- Shows your current APU wattage  
-
-- APU mV <- Shows your current APU voltage  
-
-- APU Fan <- Reads `fan2_input` (system RPM)  
-
-- NVMe Temp <- Reads system NVMe temperature  
-  (depends if your M.2 SSD supports temp reading)
-
-- Disk Read <- Reads real-time total disk reads  
-  (includes NVMe/external drives)
-
-- Disk Write <- Reads real-time total disk writes  
-  (includes NVMe/external drives)
-
-- Net Mbps <- Reads download/upload speeds  
-  (works on Ethernet/USB Wi-Fi)
+| Feature | Description |
+| --- | --- |
+| **Date and Time / BC-250 Specs** | Displays current date/time and BC-250 system information. |
+| **CU / Cores / Threads** | Shows active Compute Unit count (live via CU-count passthru if installed, otherwise the kernel's default/boot-time count via `vulkaninfo`), plus physical cores and logical threads from `/proc/cpuinfo`. |
+| **APU Load, Clock, Temp** | Displays GPU utilization, clock (`pp_dpm_sclk`), and temperature (`temp1_input`). Load will always show 0% without the `cyan-skillfish` `gpu_metrics` fix applied. |
+| **CPU Load, Clock, Temp** | Displays CPU utilization (`/proc/stat`), clock (`cpu MHz` in `/proc/cpuinfo`), and temperature via `k10temp` (`temp1_input`). |
+| **VRAM** | Shows current APU VRAM usage (`mem_info_vram_used` + `mem_info_gtt_used`). |
+| **RAM** | Shows current system RAM usage (`MemTotal` / `MemAvailable` in `/proc/meminfo`). |
+| **APU Power** | Displays current APU package wattage (`power1_average`). |
+| **APU mV** | Displays current APU core voltage (vddgfx, `in0_input`). |
+| **CPU mV** | Displays current CPU core voltage (vddnb, `in1_input`). |
+| **APU Fan** | Displays system fan RPM (`fan2_input`). |
+| **NVMe Temp** | Displays internal M.2 SSD temperature (`temp1_input`), depending on whether the drive supports temperature reporting. |
+| **Disk Read** | Displays real-time total disk read throughput, including NVMe and external drives (`/sys/block/*/stat`). |
+| **Disk Write** | Displays real-time total disk write throughput, including NVMe and external drives (`/sys/block/*/stat`). |
+| **Net Mbps** | Displays download/upload network speed. Works with Ethernet and USB Wi-Fi. |
 
 ### startup.py Issues
 If some parts of the sensors weren’t detected, you can open an issue anytime. I will try my best to fix it, but please note I can’t guarantee anything since I’m not an expert. I have tested this on Bazzite/CachyOS and it should technically work fine.
