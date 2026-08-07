@@ -52,7 +52,7 @@ Then replug the device or run:
 | Feature | Description |
 | --- | --- |
 | **Date and Time / BC-250 Specs** | Displays current date/time and BC-250 system information. |
-| **CU / Cores / Threads** | Shows active Compute Unit count (live via CU-count passthru if installed, otherwise the kernel's default/boot-time count via `vulkaninfo`), plus physical cores and logical threads from `/proc/cpuinfo`. |
+| **CU / Cores / Threads** | Shows active Compute Unit count (live via [**CU-count passthru**](https://github.com/tmghd272/bc250-cu-count-passthru) if installed, otherwise the kernel's default/boot-time count via `vulkaninfo`), plus physical cores and logical threads from `/proc/cpuinfo`. |
 | **APU Load, Clock, Temp** | Displays GPU utilization, clock (`pp_dpm_sclk`), and temperature (`temp1_input`). Load will always show 0% without the `cyan-skillfish` `gpu_metrics` fix applied. |
 | **CPU Load, Clock, Temp** | Displays CPU utilization (`/proc/stat`), clock (`cpu MHz` in `/proc/cpuinfo`), and temperature via `k10temp` (`temp1_input`). |
 | **VRAM** | Shows current APU VRAM usage (`mem_info_vram_used` + `mem_info_gtt_used`). |
