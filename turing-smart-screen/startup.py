@@ -16,6 +16,17 @@ COM_PORT = "AUTO"
 WIDTH, HEIGHT = 320, 480
 REVISION = "A"
 
+
+def fmt_rate(value, width):
+    """Right-justified number that keeps 1 decimal while it fits in `width`
+    chars, and drops to a whole number once a decimal would overflow that
+    width -- e.g. width=5: 999.9 -> '999.9', 1000.0 -> ' 1000', both 5 chars.
+    Keeps disk/network throughput fields from pushing the unit label
+    (MB/s, Mbps) sideways once values cross into 4+ digits."""
+    threshold = 10 ** (width - 2)
+    return f"{value:>{width}.1f}" if value < threshold else f"{value:>{width}.0f}"
+
+
 kernel_cu_fallback = 0  # default before get_kernel_cu_fallback() runs at startup
 
 # =========================================================
@@ -432,9 +443,9 @@ if __name__ == "__main__":
                     f"{'CPU mV:':<16}{cpu_voltage_mV:>4} {'mV':<4}\n"
                     f"{'APU Fan:':<16}{fan_rpm:>4} {'RPM':<4}\n"
                     f"{'NVMe Temp:':<16}{nvme_temp:>4} {'°C':<4}\n"
-                    f"{'Disk Read:':<16}{disk_read:>5.1f} {'MB/s↓':<8}\n"
-                    f"{'Disk Write:':<16}{disk_write:>5.1f} {'MB/s↑':<8}\n"
-                    f"{'Net Mbps:':<13}{rx_speed:>4.1f} {'↓':<3}{tx_speed:>4.1f} {'↑':<2}"
+                    f"{'Disk Read:':<16}{fmt_rate(disk_read, 5)} {'MB/s↓':<8}\n"
+                    f"{'Disk Write:':<16}{fmt_rate(disk_write, 5)} {'MB/s↑':<8}\n"
+                    f"{'Net Mbps:':<13}{fmt_rate(rx_speed, 4)} {'↓':<3}{fmt_rate(tx_speed, 4)} {'↑':<2}"
                 )
 
                 lcd_comm.DisplayText(
