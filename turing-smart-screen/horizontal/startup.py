@@ -19,11 +19,6 @@ FONT_PATH = "res/fonts/jetbrains-mono/JetBrainsMono-ExtraBold.ttf"
 
 
 def fmt_rate(value, width):
-    """Right-justified number that keeps 1 decimal while it fits in `width`
-    chars, and drops to a whole number once a decimal would overflow that
-    width -- e.g. width=5: 999.9 -> '999.9', 1000.0 -> ' 1000', both 5 chars.
-    Keeps disk/network throughput fields from pushing the unit label
-    (MB/s, Mbps) sideways once values cross into 4+ digits."""
     threshold = 10 ** (width - 2)
     return f"{value:>{width}.1f}" if value < threshold else f"{value:>{width}.0f}"
 
@@ -400,19 +395,12 @@ if __name__ == "__main__":
     while True:
         try:
             # --- Connect / Reconnect Turzx ---
-            # NOTE: LcdCommRevA always wants the native PORTRAIT dims here (320x480).
-            # Rotation is handled entirely by SetOrientation() below, not by swapping
-            # WIDTH/HEIGHT in the constructor.
             lcd_comm = LcdCommRevA(com_port=COM_PORT, display_width=WIDTH, display_height=HEIGHT)
             lcd_comm.Reset()  # Black screen / full reset
             lcd_comm.InitializeComm()
             lcd_comm.SetBrightness(level=20)
             lcd_comm.SetBackplateLedColor(led_color=(255, 255, 255))
-            # REVERSE_LANDSCAPE (not LANDSCAPE) keeps the USB-C end at the bottom.
-            # If it's still upside down on your unit, flip this back to Orientation.LANDSCAPE.
             lcd_comm.SetOrientation(orientation=Orientation.REVERSE_LANDSCAPE)
-            # Pull the *actual* post-rotation canvas size (480x320) from the lib
-            # instead of the raw WIDTH/HEIGHT constants (which stay 320x480).
             background_path = f"res/backgrounds/example_{lcd_comm.get_width()}x{lcd_comm.get_height()}.png"
             lcd_comm.DisplayBitmap(background_path)
 
@@ -436,13 +424,6 @@ if __name__ == "__main__":
                     interface_name = auto_detect_interface()
                 disk_read, disk_write = get_total_disk_rw()
 
-                # --- Everything, one flat f-string, one DisplayText call --
-                # same style as the vertical version. Each left-side field's
-                # width is tuned so every row totals exactly 28 chars before the
-                # right column starts (that's what keeps "APU Power:" etc. lined
-                # up under each other) -- e.g. RDNA2:'s "°C" field is <3 instead
-                # of <4, Zen2's is <3 instead of <2, VRAM/RAM's "GB" field is
-                # <15 instead of <4. Verified each line is exactly 28 chars.
                 FONT_SIZE = 14.3
                 text = (
                     f"{now.center(56)}\n"

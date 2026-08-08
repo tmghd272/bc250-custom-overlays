@@ -18,11 +18,6 @@ REVISION = "A"
 
 
 def fmt_rate(value, width):
-    """Right-justified number that keeps 1 decimal while it fits in `width`
-    chars, and drops to a whole number once a decimal would overflow that
-    width -- e.g. width=5: 999.9 -> '999.9', 1000.0 -> ' 1000', both 5 chars.
-    Keeps disk/network throughput fields from pushing the unit label
-    (MB/s, Mbps) sideways once values cross into 4+ digits."""
     threshold = 10 ** (width - 2)
     return f"{value:>{width}.1f}" if value < threshold else f"{value:>{width}.0f}"
 
