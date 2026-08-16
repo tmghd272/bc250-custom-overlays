@@ -22,7 +22,7 @@ def fmt_rate(value, width):
     return f"{value:>{width}.1f}" if value < threshold else f"{value:>{width}.0f}"
 
 
-kernel_cu_fallback = 0  # default before get_kernel_cu_fallback() runs at startup
+kernel_cu_fallback = 0
 
 # =========================================================
 # Hardware Stats Functions
@@ -69,16 +69,24 @@ def get_gpu_stats():
     clock = temp = 0
     used_gb = 0.0
     try:
-        clock_path = f"/sys/class/drm/{card}/device/pp_dpm_sclk"
-        if os.path.exists(clock_path):
-            with open(clock_path) as f:
-                for line in f:
-                    if "*" in line:
-                        parts = line.strip().split(":")[-1].strip().split("Mhz")[0]
-                        clock = int(parts)
-                        break
-
         temp_path = f"/sys/class/drm/{card}/device/hwmon"
+        for entry in os.listdir(temp_path):
+            freq_path = os.path.join(temp_path, entry, "freq1_input")
+            if os.path.exists(freq_path):
+                with open(freq_path) as f:
+                    clock = int(int(f.read().strip()) / 1_000_000)
+                    break
+
+        if clock == 0:
+            clock_path = f"/sys/class/drm/{card}/device/pp_dpm_sclk"
+            if os.path.exists(clock_path):
+                with open(clock_path) as f:
+                    for line in f:
+                        if "*" in line:
+                            parts = line.strip().split(":")[-1].strip().split("Mhz")[0]
+                            clock = int(parts)
+                            break
+
         for entry in os.listdir(temp_path):
             sensor_path = os.path.join(temp_path, entry, "temp1_input")
             if os.path.exists(sensor_path):
